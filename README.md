@@ -74,7 +74,7 @@ AI Provider 位于 `src/ai/providers/`。
 
 ### Windows 本地开发 / 测试
 
-当前版本默认面向 Windows 本地开发和测试。
+当前已验证的开发 / 测试环境为 Windows + QQ + NapCat + OneBot 11 + QQ-AI-Bot。
 
 在项目根目录运行 `run.bat` 即可启动 `src/main.py`。
 
@@ -89,11 +89,15 @@ AI Provider 位于 `src/ai/providers/`。
 
 `http://127.0.0.1:8080/admin/`
 
-### 生产部署
+### Linux / VPS / Docker 部署
 
-Linux / VPS / Docker 部署属于后续计划。
+QQ-AI-Bot 本身不应与 Windows 或 QQ 客户端运行环境耦合。它通过 OneBot 11 WebSocket 与 QQ / NapCat 通信，因此原则上可以运行在 Linux / VPS / Docker 环境中。
 
-增加生产部署方式时，应保持现有 Windows 本地运行方式可用，并确保最终只运行一个 QQ Bot 实例，避免重复回复。
+Linux / VPS 正式部署目前正在单独环境中进行实测，尚未将其标记为与 Windows 一样的完整已验证部署流程。
+
+其他用户如果希望部署到 Linux，应能够在 Linux 上运行 QQ + NapCat，并通过 OneBot 11 WebSocket 连接 QQ-AI-Bot；也可以将 NapCat 和 QQ-AI-Bot 分布在不同机器上，只要 OneBot WebSocket 网络可达。
+
+增加 Linux / Docker 部署方式时，必须保持现有 Windows 本地运行方式可用，并确保最终只运行一个 QQ Bot 实例，避免重复回复。
 
 生产环境的管理页面默认仍不应直接暴露到公网；如确有远程管理需求，应先设计身份验证、访问控制以及必要的反向代理 / HTTPS 方案。
 
