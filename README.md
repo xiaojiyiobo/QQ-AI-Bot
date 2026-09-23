@@ -1,36 +1,49 @@
-﻿# QQ AI Bot — AI/Agent Working Notes
+# QQ AI Bot — AI/Agent 工作说明
 
-## Purpose
-Private QQ AI assistant for the owner and a very small number of trusted users. This repository is intended to remain simple, modular, and easy to deploy. Do not turn it into a public SaaS unless explicitly requested.
+## 项目用途
 
-## Current validated capabilities
-- QQ private messages through NapCat + OneBot 11 WebSocket.
-- Text chat with provider abstraction.
-- Gemini provider using Google's native GenAI SDK.
-- Mistral provider using the Conversations API with built-in `web_search`.
-- Image understanding with the provider abstraction.
-- Per-platform/per-user in-memory conversation memory, currently 10 turns.
-- Content filtering from `config/content_filter.json`.
-- First-use `/help` message and image-then-question flow.
-- Local admin page at `/admin/` for basic provider/model configuration.
+这是一个私人 QQ AI 助手，主要供项目所有者及极少数信任的用户使用。
 
-## Current architecture
-`platform adapter -> core handler -> AIManager -> provider`
+本项目应保持简单、模块化、易于部署。
+除非用户明确要求，否则不要将项目改造成面向公众的 SaaS 服务。
 
-QQ is the only implemented platform. Future platforms must be added as adapters; do not couple platform-specific behavior into `core` or `ai`.
+## 当前已验证功能
 
-AI providers live under `src/ai/providers/`. Add future providers by implementing `AIProvider` and registering them in `src/ai/manager.py`.
+- 通过 NapCat + OneBot 11 WebSocket 接收 QQ 私聊消息
+- 支持文本对话及 AI Provider 抽象
+- 支持 Gemini Provider
+- 支持 Mistral Provider
+- 支持图片理解
+- 按平台和用户分别保存对话记忆，目前最多 10 轮
+- 支持 `config/content_filter.json` 内容过滤
+- 首次使用自动发送 `/help`
+- 支持“先发图片，再发问题”的图片理解流程
+- 提供本地 `/admin/` 管理页面，可配置 AI Provider 和模型
 
-## Admin foundation
-- `src/web/app.py` runs FastAPI and the QQ bot in the same process.
-- `src/web/admin.py` contains admin routes.
-- `src/web/config.py` owns `.env` configuration read/write logic.
-- `src/web/templates/` and `src/web/static/` contain the minimal UI.
-- Admin binds to `127.0.0.1:8080` by default. Do not expose it to the public Internet without authentication and explicit user approval.
-- API keys are never displayed in the UI; only configured/not-configured status is shown.
-- Saving provider/model settings writes `.env`; a process restart is currently required for the new provider/model to take effect.
+## 当前架构
 
-## Important configuration
+`平台适配器 → 核心处理器 → AIManager → AI Provider`
+
+目前只实现 QQ。
+未来如果增加其他聊天平台，应通过新的平台适配器实现，不要把平台相关逻辑直接耦合进 `core` 或 `ai`。
+
+AI Provider 位于 `src/ai/providers/`。
+增加新的 AI Provider 时，应实现 `AIProvider` 接口，并在 `src/ai/manager.py` 中注册。
+
+## 管理页面
+
+- `src/web/app.py`：启动 FastAPI 和 QQ Bot
+- `src/web/admin.py`：管理页面路由
+- `src/web/config.py`：负责 `.env` 配置读取和写入
+- `src/web/templates/`：管理页面模板
+- `src/web/static/`：管理页面样式
+- 管理页面默认监听 `127.0.0.1:8080`
+- 未经过身份验证和用户明确同意，不得将管理页面暴露到公网
+- API Key 不得显示在管理页面，只显示“已配置 / 未配置”
+- 修改 Provider 或模型后，目前需要重启程序才能生效
+
+## 重要配置
+
 - `AI_PROVIDER=gemini|mistral`
 - `GEMINI_API_KEY`
 - `GEMINI_MODEL`
@@ -40,24 +53,39 @@ AI providers live under `src/ai/providers/`. Add future providers by implementin
 - `ONEBOT_WS_URL`
 - `CONTENT_FILTER_CONFIG`
 
-Never print, commit, or expose API keys. Never copy secret values into logs, README files, tests, screenshots, or chat responses.
+绝对不要打印、提交或公开 API Key。
+不得将 Secret 写入日志、README、测试文件、截图或聊天回复。
 
-## Development rules
-1. Read this file before modifying the project.
-2. Inspect the real files and runtime state before assuming architecture or configuration.
-3. Prefer small, reversible changes and validate each stage before continuing.
-4. Do not add future platform integrations merely to demonstrate extensibility.
-5. Keep provider-specific code inside provider modules.
-6. Keep secrets in `.env`; `.env` must never be committed.
-7. Do not replace working behavior unless there is a concrete reason and a test/validation path.
-8. Temporary test scripts belong in the sandbox or should be removed after validation.
-9. Before deployment, add Linux/Docker support without changing the validated local behavior.
-10. When changing startup behavior, test that exactly one bot instance is running to avoid duplicate QQ replies.
+## 开发规则
 
-## Current run
-From the project root, `run.bat` launches `src/main.py`. `AI_PROVIDER` selects the provider.
+1. 修改项目之前必须先阅读本文件。
+2. 修改前先检查真实文件和运行环境，不要凭假设判断项目结构。
+3. 优先进行小范围、可回滚的修改，并逐步验证。
+4. 不要为了展示架构扩展性而提前实现未来平台。
+5. Provider 专属代码必须保持在对应 Provider 模块中。
+6. Secret 必须保存在 `.env`，`.env` 绝对不能提交到 Git。
+7. 没有明确理由和验证方案，不要替换已经正常工作的功能。
+8. 临时测试脚本应放在 Sandbox 中，或者验证完成后删除。
+9. 部署前增加 Linux / Docker 支持时，不得破坏已经验证过的本地运行行为。
+10. 修改启动方式时，必须确认最终只有一个 Bot 实例运行，避免 QQ 重复回复。
 
-The application starts both the admin HTTP server and the QQ bot. Admin URL locally: `http://127.0.0.1:8080/admin/`.
+## 当前运行方式
 
-## Deployment direction
-Target deployment is a Linux S20M or VPS. Docker is planned, but should be introduced only after the current local version is stable and the admin foundation is validated.
+在项目根目录运行 `run.bat` 即可启动 `src/main.py`。
+
+`AI_PROVIDER` 用于选择 AI Provider。
+
+程序会同时启动：
+
+- 管理 HTTP 服务
+- QQ Bot
+
+本地管理页面：
+
+`http://127.0.0.1:8080/admin/`
+
+## 部署方向
+
+目标部署环境为 Linux S20M 或 VPS。
+
+Docker 是后续计划，但只有在当前本地版本稳定、管理页面基础功能验证完成后才引入。
