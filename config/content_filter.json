@@ -1,0 +1,191 @@
+{
+  "enabled": true,
+  "rules": [
+    {
+      "keyword": "色情",
+      "action": "replace",
+      "replacement": "不当内容"
+    },
+    {
+      "keyword": "淫秽",
+      "action": "replace",
+      "replacement": "不当内容"
+    },
+    {
+      "keyword": "裸体",
+      "action": "replace",
+      "replacement": "敏感内容"
+    },
+    {
+      "keyword": "裸聊",
+      "action": "replace",
+      "replacement": "不当内容"
+    },
+    {
+      "keyword": "性爱",
+      "action": "replace",
+      "replacement": "不当内容"
+    },
+    {
+      "keyword": "性交",
+      "action": "replace",
+      "replacement": "不当内容"
+    },
+    {
+      "keyword": "赌博",
+      "action": "replace",
+      "replacement": "不当内容"
+    },
+    {
+      "keyword": "赌场",
+      "action": "replace",
+      "replacement": "不当内容"
+    },
+    {
+      "keyword": "博彩",
+      "action": "replace",
+      "replacement": "不当内容"
+    },
+    {
+      "keyword": "诈骗",
+      "action": "replace",
+      "replacement": "风险内容"
+    },
+    {
+      "keyword": "洗钱",
+      "action": "replace",
+      "replacement": "风险内容"
+    },
+    {
+      "keyword": "暴力",
+      "action": "replace",
+      "replacement": "敏感内容"
+    },
+    {
+      "keyword": "恐怖主义",
+      "action": "replace",
+      "replacement": "敏感内容"
+    },
+    {
+      "keyword": "恐怖袭击",
+      "action": "replace",
+      "replacement": "敏感内容"
+    },
+    {
+      "keyword": "极端主义",
+      "action": "replace",
+      "replacement": "敏感内容"
+    },
+    {
+      "keyword": "教唆犯罪",
+      "action": "replace",
+      "replacement": "风险内容"
+    },
+    {
+      "keyword": "自杀",
+      "action": "replace",
+      "replacement": "敏感内容"
+    },
+    {
+      "keyword": "杀人",
+      "action": "replace",
+      "replacement": "敏感内容"
+    },
+    {
+      "keyword": "谋杀",
+      "action": "replace",
+      "replacement": "敏感内容"
+    },
+    {
+      "keyword": "毒品",
+      "action": "replace",
+      "replacement": "敏感内容"
+    },
+    {
+      "keyword": "吸毒",
+      "action": "replace",
+      "replacement": "敏感内容"
+    },
+    {
+      "keyword": "制毒",
+      "action": "replace",
+      "replacement": "风险内容"
+    },
+    {
+      "keyword": "贩毒",
+      "action": "replace",
+      "replacement": "风险内容"
+    },
+    {
+      "keyword": "诈骗教程",
+      "action": "replace",
+      "replacement": "风险内容"
+    },
+    {
+      "keyword": "盗号",
+      "action": "replace",
+      "replacement": "风险内容"
+    },
+    {
+      "keyword": "木马",
+      "action": "replace",
+      "replacement": "风险内容"
+    },
+    {
+      "keyword": "病毒",
+      "action": "replace",
+      "replacement": "风险内容"
+    },
+    {
+      "keyword": "人肉搜索",
+      "action": "replace",
+      "replacement": "风险内容"
+    },
+    {
+      "keyword": "隐私泄露",
+      "action": "replace",
+      "replacement": "风险内容"
+    },
+    {
+      "keyword": "网络暴力",
+      "action": "replace",
+      "replacement": "不当内容"
+    },
+    {
+      "keyword": "诽谤",
+      "action": "replace",
+      "replacement": "不当内容"
+    },
+    {
+      "keyword": "造谣",
+      "action": "replace",
+      "replacement": "不当内容"
+    },
+
+    {
+      "keyword": "中国共产党",
+      "action": "replace",
+      "replacement": "相关组织"
+    },
+    {
+      "keyword": "共产党",
+      "action": "replace",
+      "replacement": "相关组织"
+    },
+    {
+      "keyword": "中共中央",
+      "action": "replace",
+      "replacement": "相关机构"
+    },
+    {
+      "keyword": "习近平",
+      "action": "replace",
+      "replacement": "相关人物"
+    },
+    {
+      "keyword": "习主席",
+      "action": "replace",
+      "replacement": "相关人物"
+    }
+  ]
+}

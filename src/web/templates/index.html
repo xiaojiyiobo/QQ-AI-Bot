@@ -1,0 +1,38 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>QQ AI Bot 管理</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <div><h1>QQ AI Bot</h1><p>基础配置 · v0.x</p></div>
+      <span class="badge">本机管理</span>
+    </header>
+
+    {% if request.query_params.get('saved') %}<div class="notice">配置已保存。重新启动 Bot 后生效。</div>{% endif %}
+
+    <section class="card">
+      <h2>AI Provider</h2>
+      <form method="post" action="/admin/config">
+        <label>当前 Provider<select name="provider"><option value="gemini" {% if config.provider == 'gemini' %}selected{% endif %}>Gemini</option><option value="mistral" {% if config.provider == 'mistral' %}selected{% endif %}>Mistral</option></select></label>
+        <label>Gemini 模型<input name="gemini_model" value="{{ config.gemini_model }}"></label>
+        <label>Mistral 文本模型<input name="mistral_model" value="{{ config.mistral_model }}"></label>
+        <label>Mistral 视觉模型<input name="mistral_vision_model" value="{{ config.mistral_vision_model }}"></label>
+        <button type="submit">保存配置</button>
+      </form>
+    </section>
+
+    <section class="card grid">
+      <div><h2>API Key</h2><p>Gemini：<strong>{{ '已配置' if config.gemini_key_configured else '未配置' }}</strong></p><p>Mistral：<strong>{{ '已配置' if config.mistral_key_configured else '未配置' }}</strong></p></div>
+      <div><h2>QQ / OneBot</h2><p>{{ config.onebot_ws_url }}</p><small>当前版本只读显示，后续再加入修改。</small></div>
+      <div><h2>内容过滤</h2><p>{{ config.content_filter_config }}</p><small>当前版本只读显示，后续再加入规则编辑。</small></div>
+    </section>
+
+    <section class="card"><h2>说明</h2><p>这是第一版管理后台，只负责基础配置。API Key 不在页面显示，也不会回传给浏览器。</p><p>保存 Provider 或模型后需要重启 Bot 才会重新加载配置。</p></section>
+  </main>
+</body>
+</html>
