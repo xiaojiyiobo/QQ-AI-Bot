@@ -21,7 +21,7 @@ Docker Compose
         └── NapCat WebUI / OneBot WebSocket
 ```
 
-NapCat 官方 Docker 项目提供 WebUI（默认 6099）和 QQ 数据持久化目录；官方也提供 NapCat + qq-ai-bot 的 Compose 示例。citeturn1search0turn1search1
+NapCat 官方 Docker 项目提供 WebUI（默认 6099）和 QQ 数据持久化目录；官方也提供 NapCat + qq-ai-bot 的 Compose 示例。
 
 ## 首次部署
 
@@ -38,15 +38,15 @@ docker compose up -d --build
 6. 通过 SSH 隧道访问本机管理后台 `127.0.0.1:8080`。
 7. 打开管理页面的“QQ 登录”，进入 NapCat WebUI。
 8. 使用手机 QQ 扫码完成首次 QQ 登录。
-9. 登录成功后，NapCat 的 QQ 数据保存在 `data/napcat/QQ`，后续重启可复用持久化数据。NapCat 官方文档说明 QQ 数据可持久化，WebUI 默认端口为 6099。citeturn0search6turn1search1
+9. 登录成功后，NapCat 的 QQ 数据保存在 `data/napcat/QQ`，后续重启可复用持久化数据。NapCat 官方文档说明 QQ 数据可持久化，WebUI 默认端口为 6099。
 
 ## 为什么 Bot 连接 `napcat:3001`
 
-当前 QQ-AI-Bot 使用 OneBot WebSocket 客户端主动连接 NapCat 的 WebSocket 服务端。Docker Compose 中两个服务位于同一网络，因此 Bot 使用服务名 `napcat` 连接容器内部 3001 端口，而不是依赖 `127.0.0.1`。NapCat 官方安装脚本也将 `ws` 模式配置为 3001 WebSocket 服务。citeturn2search4turn2search7
+当前 QQ-AI-Bot 使用 OneBot WebSocket 客户端主动连接 NapCat 的 WebSocket 服务端。Docker Compose 中两个服务位于同一网络，因此 Bot 使用服务名 `napcat` 连接容器内部 3001 端口，而不是依赖 `127.0.0.1`。NapCat 官方安装脚本也将 `ws` 模式配置为 3001 WebSocket 服务。
 
 ## 安全边界
 
-当前 Compose 将管理后台 8080 和 NapCat WebUI 6099 都只绑定到 VPS 的 `127.0.0.1`，不直接暴露公网。远程访问应通过 SSH 隧道或之后增加经过身份验证的 HTTPS 反向代理。NapCat 官方文档明确提醒公网环境要注意 6099 WebUI。citeturn1search1turn0search6
+当前 Compose 将管理后台 8080 和 NapCat WebUI 6099 都只绑定到 VPS 的 `127.0.0.1`，不直接暴露公网。远程访问应通过 SSH 隧道或之后增加经过身份验证的 HTTPS 反向代理。NapCat 官方文档明确提醒公网环境要注意 6099 WebUI。
 
 ## 后续
 
