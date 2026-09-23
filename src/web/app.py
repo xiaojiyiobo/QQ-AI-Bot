@@ -16,10 +16,9 @@ from web.admin import router
 
 
 platform = QQOneBot()
-handler = MessageHandler(platform=platform)
 
 
-async def bot_loop() -> None:
+async def bot_loop(handler: MessageHandler) -> None:
     print(f"Connecting to {platform.ws_url} ...")
     async with platform.connect() as ws:
         print("Connected. Waiting for QQ messages...")
@@ -29,12 +28,30 @@ async def bot_loop() -> None:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    task = asyncio.create_task(bot_loop(), name="qq-bot")
+    app.state.bot_status = "starting"
+    task: asyncio.Task | None = None
+
+    try:
+        handler = MessageHandler(platform=platform)
+    except RuntimeError as exc:
+        app.state.bot_status = "disabled"
+        print(f"[AI] Bot disabled: {exc}")
+        print("[AI] Admin panel will remain available. Configure the API key and restart the bot to enable QQ AI features.")
+    except Exception as exc:
+        app.state.bot_status = "error"
+        print(f"[BOT] Initialization failed: type={type(exc).__name__}")
+        print("[BOT] Admin panel will remain available; fix the configuration and restart the bot.")
+    else:
+        app.state.bot_status = "running"
+        task = asyncio.create_task(bot_loop(handler), name="qq-bot")
+
     try:
         yield
     finally:
-        task.cancel()
-        await asyncio.gather(task, return_exceptions=True)
+        if task is not None:
+            task.cancel()
+            await asyncio.gather(task, return_exceptions=True)
+        app.state.bot_status = "stopped"
 
 
 app = FastAPI(title="QQ AI Bot Admin", lifespan=lifespan)

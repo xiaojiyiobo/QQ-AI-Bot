@@ -15,7 +15,15 @@ config = ConfigManager()
 
 @router.get("/", response_class=HTMLResponse)
 async def index(request: Request):
-    return templates.TemplateResponse(request=request, name="index.html", context={"config": config.safe_view(), "saved": False})
+    return templates.TemplateResponse(
+        request=request,
+        name="index.html",
+        context={
+            "config": config.safe_view(),
+            "bot_status": getattr(request.app.state, "bot_status", "unknown"),
+            "saved": False,
+        },
+    )
 
 
 @router.post("/config")

@@ -45,6 +45,7 @@
     </section>
 
     <section class="card grid">
+      <div><h2>Bot 状态</h2><p><strong>{{ {'running': '运行中', 'disabled': '未启动（API Key 未配置）', 'error': '初始化失败', 'starting': '启动中', 'stopped': '已停止'}.get(bot_status, bot_status) }}</strong></p>{% if bot_status == 'disabled' %}<small>管理后台仍可正常使用。配置对应 Provider 的 API Key 后，重启 Bot 容器即可启动 QQ AI 功能。</small>{% elif bot_status == 'error' %}<small>Bot 初始化失败，但管理后台不会因此退出。</small>{% endif %}</div>
       <div><h2>API Key</h2><p>Gemini：<strong>{{ '已配置' if config.gemini_key_configured else '未配置' }}</strong></p><p>Mistral：<strong>{{ '已配置' if config.mistral_key_configured else '未配置' }}</strong></p></div>
       <div><h2>QQ / OneBot</h2><p>{{ config.onebot_ws_url }}</p><p>NapCat WebUI：{{ config.napcat_webui_url }}</p><small>OneBot 当前为只读显示；QQ 登录通过 NapCat WebUI 完成。</small></div>
       <div><h2>内容过滤</h2><p>{{ config.content_filter_config }}</p><small>当前版本只读显示，后续再加入规则编辑。</small></div>
