@@ -3,6 +3,7 @@
 import asyncio
 from contextlib import asynccontextmanager
 from pathlib import Path
+import os
 
 import uvicorn
 from fastapi import FastAPI
@@ -42,8 +43,8 @@ app.include_router(router)
 
 
 async def serve() -> None:
-    host = "127.0.0.1"
-    port = 8080
+    host = os.getenv("ADMIN_HOST", "127.0.0.1")
+    port = int(os.getenv("ADMIN_PORT", "8080"))
     config = uvicorn.Config(app, host=host, port=port, log_level="info")
     server = uvicorn.Server(config)
     print(f"Admin panel: http://{host}:{port}/admin/")

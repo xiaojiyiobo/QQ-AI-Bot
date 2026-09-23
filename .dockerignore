@@ -1,0 +1,13 @@
+.git
+.gitignore
+.env
+.venv
+__pycache__
+*.pyc
+*.bak.*
+06_Backups
+99_Sandbox
+02_Builds
+03_Artifacts
+04_Deploy
+05_Docs

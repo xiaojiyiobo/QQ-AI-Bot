@@ -55,7 +55,11 @@ AI Provider 位于 `src/ai/providers/`。
 - `MISTRAL_MODEL`
 - `MISTRAL_VISION_MODEL`
 - `ONEBOT_WS_URL`
+- `NAPCAT_WEBUI_BROWSER_URL`
+- `ADMIN_HOST` / `ADMIN_PORT`
 - `CONTENT_FILTER_CONFIG`
+
+Linux Docker 正式环境使用仓库根目录的 `compose.yaml`：NapCat 与 QQ-AI-Bot 分开运行，通过 Docker 内部网络连接；首次部署后通过管理页面进入 NapCat WebUI 扫码登录 QQ。详细步骤见 `deploy/README.md`。
 
 绝对不要打印、提交或公开 API Key。
 不得将 Secret 写入日志、README、测试文件、截图或聊天回复。
