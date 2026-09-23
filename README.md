@@ -91,18 +91,28 @@ AI Provider 位于 `src/ai/providers/`。
 
 ### Linux / VPS / Docker 部署
 
-QQ-AI-Bot 本身不应与 Windows 或 QQ 客户端运行环境耦合。它通过 OneBot 11 WebSocket 与 QQ / NapCat 通信，因此原则上可以运行在 Linux / VPS / Docker 环境中。
+QQ-AI-Bot 本身不应与 Windows 或本地 QQ 客户端运行环境耦合。它通过 OneBot 11 WebSocket 与 QQ / NapCat 通信，因此可以将 QQ-AI-Bot 部署在 Linux 服务器、VPS 或 Docker 环境中。
 
-Linux / VPS 正式部署目前正在单独环境中进行实测，尚未将其标记为与 Windows 一样的完整已验证部署流程。
+当前正在单独的 Linux VPS 环境中进行 **24 小时正式环境实测**。该环境与 Windows 本地开发 / 测试环境分离，不影响 Windows 端的开发和验证。
 
-其他用户如果希望部署到 Linux，应能够在 Linux 上运行 QQ + NapCat，并通过 OneBot 11 WebSocket 连接 QQ-AI-Bot；也可以将 NapCat 和 QQ-AI-Bot 分布在不同机器上，只要 OneBot WebSocket 网络可达。
+当前正式环境的目标部署结构为：
 
-增加 Linux / Docker 部署方式时，必须保持现有 Windows 本地运行方式可用，并确保最终只运行一个 QQ Bot 实例，避免重复回复。
+`Linux VPS → Docker / Docker Compose → NapCat + QQ-AI-Bot`
+
+其中 QQ / NapCat 负责提供 QQ 接入，QQ-AI-Bot 通过 OneBot 11 WebSocket 与 NapCat 通信。NapCat 与 QQ-AI-Bot 也可以部署在不同机器上，只要 OneBot WebSocket 网络可达。OneBot 11 的 WebSocket 通信模式支持 NapCat 作为客户端连接 Bot 侧的 WebSocket 服务端。
+
+Linux / VPS / Docker 部署目前属于**正在实测中的部署方式**，在正式环境验证完成前，不将其描述为与 Windows 一样的完整已验证流程。
+
+增加 Linux / Docker 支持时，必须保持现有 Windows 本地运行方式可用，并确保最终只有一个 QQ Bot 实例运行，避免重复回复。
 
 生产环境的管理页面默认仍不应直接暴露到公网；如确有远程管理需求，应先设计身份验证、访问控制以及必要的反向代理 / HTTPS 方案。
 
 ## 部署方向
 
-目标部署环境为 Linux S20M 或 VPS。
+目标部署环境为 **Linux 服务器**，包括 VPS、独立服务器以及其他能够长期运行 Linux 的服务器环境。
 
-Docker 是后续计划，但只有在当前本地版本稳定、管理页面基础功能验证完成后才引入。
+当前优先验证 **VPS 24 小时独立运行**方案，并以 Docker / Docker Compose 作为正式环境的部署方式进行实测。
+
+Windows 主要作为本地开发 / 测试环境；Linux 服务器用于长期运行 QQ Bot。两者应保持环境隔离，避免测试过程影响正式 QQ Bot。
+
+Docker 化部署正在当前正式环境中实测。验证完成后，再将完整的 Linux / Docker 部署步骤整理为其他用户可以直接复现的部署文档。
