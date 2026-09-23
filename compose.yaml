@@ -8,7 +8,7 @@ services:
       NAPCAT_GID: ${NAPCAT_GID:-1000}
       WS_ENABLE: "true"
     ports:
-      - "127.0.0.1:6099:6099"
+      - "6099:6099"
     volumes:
       - ./data/napcat/config:/app/napcat/config
       - ./data/napcat/QQ:/app/.config/QQ
@@ -28,7 +28,7 @@ services:
       ADMIN_HOST: 0.0.0.0
       ADMIN_PORT: 8080
     ports:
-      - "127.0.0.1:8080:8080"
+      - "8080:8080"
     depends_on:
       - napcat
     networks:
