@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8">
@@ -10,10 +10,28 @@
   <main class="wrap">
     <header>
       <div><h1>QQ AI Bot</h1><p>基础配置 · v0.x</p></div>
-      <span class="badge">本机管理</span>
+      <span class="badge">管理后台</span>
     </header>
 
     {% if request.query_params.get('saved') %}<div class="notice">配置已保存。重新启动 Bot 后生效。</div>{% endif %}
+
+    <section class="card">
+      <h2>QQ 登录</h2>
+      <p>首次部署时，不需要在命令行里登录 QQ。NapCat 提供 QQ 登录 WebUI，这里直接嵌入登录页面；使用手机 QQ 扫码完成机器人账号登录。</p>
+      <div class="login-actions">
+        <a class="button-link" href="{{ config.napcat_webui_url }}" target="_blank" rel="noopener noreferrer">在新窗口打开 QQ 登录</a>
+      </div>
+      <div class="napcat-frame-wrap">
+        <iframe
+          src="{{ config.napcat_webui_url }}"
+          title="NapCat QQ 登录"
+          loading="lazy"
+          referrerpolicy="no-referrer"
+          allow="clipboard-read; clipboard-write"
+        ></iframe>
+      </div>
+      <small>如果二维码没有显示，请使用上面的“在新窗口打开 QQ 登录”。正式 VPS 环境建议通过受控入口访问 NapCat WebUI，不要直接把 6099 端口暴露到公网。</small>
+    </section>
 
     <section class="card">
       <h2>AI Provider</h2>
@@ -28,11 +46,11 @@
 
     <section class="card grid">
       <div><h2>API Key</h2><p>Gemini：<strong>{{ '已配置' if config.gemini_key_configured else '未配置' }}</strong></p><p>Mistral：<strong>{{ '已配置' if config.mistral_key_configured else '未配置' }}</strong></p></div>
-      <div><h2>QQ / OneBot</h2><p>{{ config.onebot_ws_url }}</p><small>当前版本只读显示，后续再加入修改。</small></div>
+      <div><h2>QQ / OneBot</h2><p>{{ config.onebot_ws_url }}</p><p>NapCat WebUI：{{ config.napcat_webui_url }}</p><small>OneBot 当前为只读显示；QQ 登录通过 NapCat WebUI 完成。</small></div>
       <div><h2>内容过滤</h2><p>{{ config.content_filter_config }}</p><small>当前版本只读显示，后续再加入规则编辑。</small></div>
     </section>
 
-    <section class="card"><h2>说明</h2><p>这是第一版管理后台，只负责基础配置。API Key 不在页面显示，也不会回传给浏览器。</p><p>保存 Provider 或模型后需要重启 Bot 才会重新加载配置。</p></section>
+    <section class="card"><h2>说明</h2><p>QQ 登录由 NapCat 负责，QQ-AI-Bot 通过 OneBot 11 WebSocket 接收 QQ 消息。这样可以避免把 QQ 登录逻辑重复实现到机器人后端。</p><p>API Key 不在页面显示，也不会回传给浏览器。保存 Provider 或模型后需要重启 Bot 才会重新加载配置。</p></section>
   </main>
 </body>
 </html>

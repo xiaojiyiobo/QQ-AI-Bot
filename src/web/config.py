@@ -22,6 +22,7 @@ class ConfigManager:
             "mistral_model": values.get("MISTRAL_MODEL", "mistral-small-latest"),
             "mistral_vision_model": values.get("MISTRAL_VISION_MODEL", "ministral-14b-2512"),
             "onebot_ws_url": values.get("ONEBOT_WS_URL", "ws://127.0.0.1:6700"),
+            "napcat_webui_url": values.get("NAPCAT_WEBUI_BROWSER_URL", "http://127.0.0.1:6099/webui/"),
             "content_filter_config": values.get("CONTENT_FILTER_CONFIG", "config/content_filter.json"),
             "gemini_key_configured": bool(values.get("GEMINI_API_KEY")),
             "mistral_key_configured": bool(values.get("MISTRAL_API_KEY")),

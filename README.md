@@ -18,7 +18,8 @@
 - 支持 `config/content_filter.json` 内容过滤
 - 首次使用自动发送 `/help`
 - 支持“先发图片，再发问题”的图片理解流程
-- 提供本地 `/admin/` 管理页面，可配置 AI Provider 和模型
+- 提供 `/admin/` 管理页面，可配置 AI Provider 和模型
+- 管理页面提供 NapCat QQ 登录入口，首次部署可通过 WebUI 扫码登录 QQ，无需在命令行中完成 QQ 登录
 
 ## 当前架构
 
@@ -38,6 +39,8 @@ AI Provider 位于 `src/ai/providers/`。
 - `src/web/templates/`：管理页面模板
 - `src/web/static/`：管理页面样式
 - 管理页面默认仅监听本机 `127.0.0.1:8080`，默认不对局域网或公网开放
+- 管理页面中的“QQ 登录”区域使用 NapCat WebUI 完成 QQ 扫码登录；QQ 登录由 NapCat 负责，QQ-AI-Bot 不重复实现 QQ 登录协议
+- `NAPCAT_WEBUI_BROWSER_URL` 用于指定浏览器访问的 NapCat WebUI 地址，默认 `http://127.0.0.1:6099/webui/`
 - 如果未来确有远程管理需求，应单独设计访问控制与身份验证，并在确认安全方案后再开放管理页面
 - 未经过身份验证和用户明确同意，不得将管理页面暴露到公网
 - API Key 不得显示在管理页面，只显示“已配置 / 未配置”
