@@ -35,3 +35,70 @@ echo "[OK] QQ-AI-Bot Container"
 echo "[OK] Admin :8080"
 echo "[OK] NapCat WebUI :6099"
 echo "[OK] OneBot uses ws://napcat:3001 inside Docker"
+
+# ---- NapCat WebUI Token auto-detection ----
+# NapCat prints its randomly generated WebUI token to the container logs on startup:
+#   [WebUi] WebUi Token: xxxxxxxx
+# Poll the logs until the token appears (NapCat can be slow to start).
+# The token is never hard-coded and never written to git: it is only printed to the terminal.
+# NAPCAT_TOKEN_TIMEOUT / NAPCAT_TOKEN_INTERVAL can override the 60s / 2s defaults (used by tests).
+wait_for_napcat_token() {
+  local container="${1:-qq-ai-bot-napcat}"
+  local timeout_secs="${NAPCAT_TOKEN_TIMEOUT:-60}"
+  local interval_secs="${NAPCAT_TOKEN_INTERVAL:-2}"
+  case "$timeout_secs" in ''|*[!0-9]*) timeout_secs=60;; esac
+  case "$interval_secs" in ''|*[!0-9]*|0) interval_secs=2;; esac
+  local elapsed=0
+  local token=""
+
+  while [ "$elapsed" -lt "$timeout_secs" ]; do
+    token="$(docker logs --tail 200 "$container" 2>/dev/null \
+      | sed -e 's/\x1b\[[0-9;]*m//g' \
+      | grep 'WebUi Token:' \
+      | tail -n 1 \
+      | sed -E 's/^.*WebUi Token:[[:space:]]*//' \
+      | awk '{print $1}' || true)"
+    if [ -n "$token" ]; then
+      printf '%s\n' "$token"
+      return 0
+    fi
+    sleep "$interval_secs"
+    elapsed=$((elapsed + interval_secs))
+  done
+  return 1
+}
+
+echo
+echo "[6/6] NapCat WebUI Token"
+NAPCAT_TOKEN=""
+if NAPCAT_TOKEN="$(wait_for_napcat_token qq-ai-bot-napcat)"; then
+  echo "[OK] NapCat WebUI Token detected"
+else
+  echo "[WARN] NapCat WebUI Token could not be detected."
+  echo "[WARN] Run manually: docker logs qq-ai-bot-napcat | grep \"WebUi Token\""
+fi
+
+VPS_IP="$(hostname -I 2>/dev/null | awk '{print $1}')"
+if [ -z "$VPS_IP" ]; then
+  VPS_IP="<VPS-IP>"
+fi
+
+echo
+echo "================================"
+echo "QQ-AI-Bot Deployment Complete"
+echo "================================"
+echo
+echo "Admin:"
+echo "http://$VPS_IP:8080/admin/"
+echo
+echo "NapCat WebUI:"
+echo "http://$VPS_IP:6099/webui/"
+echo
+if [ -n "$NAPCAT_TOKEN" ]; then
+  echo "NapCat WebUI Token:"
+  echo "$NAPCAT_TOKEN"
+else
+  echo "NapCat WebUI Token: (not detected)"
+fi
+echo
+echo "================================"
