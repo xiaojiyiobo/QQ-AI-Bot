@@ -92,6 +92,12 @@ http://VPS公网IP:6099/webui/
 http://VPS公网IP:8080/admin/
 ```
 
+部署脚本执行完成后，会直接在终端显示 NapCat WebUI Token（从 NapCat 容器日志自动提取；NapCat 启动较慢时最多等待 60 秒）。只有当自动检测失败并显示 `[WARN]` 时，才需要手动执行：
+
+```bash
+docker logs qq-ai-bot-napcat | grep "WebUi Token"
+```
+
 第一次登录 QQ 仍然需要本人扫码。之后 QQ 数据和 NapCat 配置会保存在 `data/napcat/`，因此 Docker 重启、Compose 重启或 VPS 重启时会尽可能复用已有登录状态。**QQ 登录态最终是否会被 QQ 服务端要求重新验证，必须通过实际长时间运行测试确认，不能仅靠 Docker 持久化保证。**
 
 ### 管理后台
