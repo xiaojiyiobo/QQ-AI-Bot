@@ -1,87 +1,111 @@
 # Linux VPS + Docker Compose 部署
 
-> 当前文档用于正式环境实测。Windows 本地开发环境不受影响。
+## 一键部署
 
-## 目标结构
+```bash
+cp .env.example .env
+mkdir -p data/app data/napcat/config data/napcat/QQ
+chmod +x deploy/deploy.sh
+./deploy/deploy.sh
+```
 
+部署脚本会串行执行：
+
+1. 防重复部署锁 `/tmp/qq-ai-bot-deploy.lock`
+2. Compose 配置校验
+3. 镜像拉取
+4. QQ-AI-Bot 构建
+5. Compose 启动
+6. 8080 / 6099 / OneBot 3001 基础检查
+
+## 服务关系
+
+```text
 浏览器 / 手机
-  |
-  +-- http://VPS公网IP:8080/admin/
-  |       +-- QQ-AI-Bot 管理后台
-  |
-  +-- http://VPS公网IP:6099/webui/
-          +-- NapCat WebUI
+  ├─ http://VPS公网IP:8080/admin/
+  └─ http://VPS公网IP:6099/webui/
 
 Docker Compose
-  +-- qq-ai-bot
-  |    +-- ws://napcat:3001
-  +-- napcat
-       +-- QQ 持久化数据
-       +-- NapCat WebUI / OneBot WebSocket
+  ├─ napcat
+  │   ├─ QQ
+  │   └─ OneBot WebSocket :3001
+  └─ qq-ai-bot
+      └─ ws://napcat:3001
+```
 
-Docker Compose 中两个服务位于同一网络。QQ-AI-Bot 通过 Docker 内部 DNS 使用 napcat:3001 连接 NapCat 的 OneBot WebSocket，不使用宿主机 127.0.0.1。
+3001 **不会映射到 VPS 公网**。8080 和 6099 才是给外部浏览器访问的端口。
 
-## 首次部署
+## OneBot 自动配置
 
-1. 准备 Linux VPS，并安装 Docker Engine 与 Docker Compose。
-2. 克隆本仓库。
-3. 复制 .env.example 为 .env。
-4. 在 .env 中填写 AI API Key 和需要的模型配置。
-5. 执行：
+首次部署脚本会把仓库中的：
 
-docker compose up -d --build
+```text
+deploy/napcat/onebot11.json
+```
 
-6. 确认 VPS 云厂商安全组 / 防火墙允许 TCP 8080 和 6099。
-7. 从外部电脑或手机打开：
-   - http://VPS公网IP:8080/admin/
-   - http://VPS公网IP:6099/webui/
-8. 打开管理页面的“QQ 登录”，进入 NapCat WebUI。
-9. 使用手机 QQ 扫码完成首次 QQ 登录。
-10. 登录成功后，NapCat 的 QQ 数据保存于 data/napcat/QQ，后续重启可复用持久化数据。
+复制到：
 
-## 为什么 Bot 连接 napcat:3001
+```text
+data/napcat/config/onebot11.json
+```
 
-当前 QQ-AI-Bot 使用 OneBot WebSocket 客户端主动连接 NapCat WebSocket 服务端。Docker Compose 中两个服务位于同一网络，因此 Bot 使用服务名 napcat 连接容器内部 3001 端口，而不是依赖 127.0.0.1。
+其中已经固定：
 
-6099 和 8080 是宿主机发布端口，仅用于外部浏览器访问；它们不参与 QQ-AI-Bot 与 NapCat 的内部 OneBot 通信。
+- Name：`QQ-AI-BOT`
+- Enable：`true`
+- Host：`0.0.0.0`
+- Port：`3001`
+- Message format：`array`
+- Report self message：`false`
+- Force push event：`true`
+- Token：空字符串
+- Heartbeat：30000ms
 
-## 公网访问说明
+只有第一次部署时复制；如果配置已经存在，不会覆盖用户现有配置。
 
-当前正式 Docker Compose 配置将：
+## QQ 登录与持久化
 
-- NapCat WebUI 6099 发布到宿主机所有网络接口；
-- QQ-AI-Bot 管理后台 8080 发布到宿主机所有网络接口；
-- QQ-AI-Bot 容器内部管理服务继续监听 0.0.0.0:8080；
-- QQ-AI-Bot 与 NapCat 继续通过 ws://napcat:3001 通信。
+NapCat 数据目录：
 
-因此，VPS 公网 IP 可直接访问：
+```text
+data/napcat/QQ
+data/napcat/config
+```
 
-http://VPS公网IP:6099/webui/
+首次启动打开 NapCat WebUI 完成 QQ 扫码登录。之后 Docker / Compose / VPS 重启会复用这些数据。`NAPCAT_ACCOUNT` 可以在 `.env` 中填写 QQ 号，用于 NapCat 的账号启动参数；留空时仍可通过 WebUI 扫码登录。
+
+注意：Docker 持久化只能保证本地登录数据被保存，不能保证 QQ 服务端永远不会要求重新验证。ErrCode 3 的长期恢复能力必须通过真实 VPS 长时间运行测试确认。
+
+## AI 配置
+
+管理后台：
+
+```text
 http://VPS公网IP:8080/admin/
+```
 
-发布端口到宿主机所有接口意味着这些端口可能直接暴露到互联网；Docker 官方文档也明确说明，未指定 host IP 的 published port 默认绑定到所有网络接口。因此正式环境应至少在 VPS 云安全组 / 主机防火墙层面确认只开放需要的端口，并注意 6099 是 NapCat WebUI 管理入口。
+可以配置：
 
-本次部署不增加后台账号、密码或额外认证系统；如以后需要更严格的公网访问控制，再单独增加认证或 HTTPS 反向代理。
+- Gemini / Mistral
+- API Key
+- 模型
+- 保存
+- 保存并重启 Bot
 
-## Windows 本地开发 / 测试
+生产配置持久化在：
 
-Windows 本地运行方式保持不变，不因 VPS 的公网端口发布设置而改变。
+```text
+data/app/app-config.env
+```
 
-Windows 本地管理页面仍默认使用：
+真实 API Key 不会显示在页面，也不要提交到 Git。
 
+## Windows 本地开发
+
+Windows 仍然使用原来的 `run.bat`，默认管理页面：
+
+```text
 http://127.0.0.1:8080/admin/
+```
 
-.env.example 中的 127.0.0.1 默认值用于本地运行；Docker Compose 中的生产环境配置会单独覆盖管理服务监听地址及宿主机端口发布方式。
-
-## 持久化
-
-NapCat 配置与 QQ 数据继续使用：
-
-./data/napcat/config
-./data/napcat/QQ
-
-本次修改不改变持久化目录、Docker 网络或容器 restart: unless-stopped 策略。
-
-## 后续
-
-后续如需要，再单独补充 HTTPS、管理后台认证、备份恢复等能力。
+Linux/VPS Compose 的 8080 / 6099 公网发布不会修改 Windows 本地行为。

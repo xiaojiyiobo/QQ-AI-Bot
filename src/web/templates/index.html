@@ -1,57 +1,26 @@
 <!doctype html>
 <html lang="zh-CN">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>QQ AI Bot 管理</title>
-  <link rel="stylesheet" href="/static/style.css">
-</head>
-<body>
-  <main class="wrap">
-    <header>
-      <div><h1>QQ AI Bot</h1><p>基础配置 · v0.x</p></div>
-      <span class="badge">管理后台</span>
-    </header>
-
-    {% if request.query_params.get('saved') %}<div class="notice">配置已保存。重新启动 Bot 后生效。</div>{% endif %}
-
-    <section class="card">
-      <h2>QQ 登录</h2>
-      <p>首次部署时，不需要在命令行里登录 QQ。NapCat 提供 QQ 登录 WebUI，这里直接嵌入登录页面；使用手机 QQ 扫码完成机器人账号登录。</p>
-      <div class="login-actions">
-        <a class="button-link" href="{{ config.napcat_webui_url }}" target="_blank" rel="noopener noreferrer">在新窗口打开 QQ 登录</a>
-      </div>
-      <div class="napcat-frame-wrap">
-        <iframe
-          src="{{ config.napcat_webui_url }}"
-          title="NapCat QQ 登录"
-          loading="lazy"
-          referrerpolicy="no-referrer"
-          allow="clipboard-read; clipboard-write"
-        ></iframe>
-      </div>
-      <small>如果二维码没有显示，请使用上面的“在新窗口打开 QQ 登录”。正式 VPS 环境建议通过受控入口访问 NapCat WebUI，不要直接把 6099 端口暴露到公网。</small>
-    </section>
-
-    <section class="card">
-      <h2>AI Provider</h2>
-      <form method="post" action="/admin/config">
-        <label>当前 Provider<select name="provider"><option value="gemini" {% if config.provider == 'gemini' %}selected{% endif %}>Gemini</option><option value="mistral" {% if config.provider == 'mistral' %}selected{% endif %}>Mistral</option></select></label>
-        <label>Gemini 模型<input name="gemini_model" value="{{ config.gemini_model }}"></label>
-        <label>Mistral 文本模型<input name="mistral_model" value="{{ config.mistral_model }}"></label>
-        <label>Mistral 视觉模型<input name="mistral_vision_model" value="{{ config.mistral_vision_model }}"></label>
-        <button type="submit">保存配置</button>
-      </form>
-    </section>
-
-    <section class="card grid">
-      <div><h2>Bot 状态</h2><p><strong>{{ {'running': '运行中', 'disabled': '未启动（API Key 未配置）', 'error': '初始化失败', 'starting': '启动中', 'stopped': '已停止'}.get(bot_status, bot_status) }}</strong></p>{% if bot_status == 'disabled' %}<small>管理后台仍可正常使用。配置对应 Provider 的 API Key 后，重启 Bot 容器即可启动 QQ AI 功能。</small>{% elif bot_status == 'error' %}<small>Bot 初始化失败，但管理后台不会因此退出。</small>{% endif %}</div>
-      <div><h2>API Key</h2><p>Gemini：<strong>{{ '已配置' if config.gemini_key_configured else '未配置' }}</strong></p><p>Mistral：<strong>{{ '已配置' if config.mistral_key_configured else '未配置' }}</strong></p></div>
-      <div><h2>QQ / OneBot</h2><p>{{ config.onebot_ws_url }}</p><p>NapCat WebUI：{{ config.napcat_webui_url }}</p><small>OneBot 当前为只读显示；QQ 登录通过 NapCat WebUI 完成。</small></div>
-      <div><h2>内容过滤</h2><p>{{ config.content_filter_config }}</p><small>当前版本只读显示，后续再加入规则编辑。</small></div>
-    </section>
-
-    <section class="card"><h2>说明</h2><p>QQ 登录由 NapCat 负责，QQ-AI-Bot 通过 OneBot 11 WebSocket 接收 QQ 消息。这样可以避免把 QQ 登录逻辑重复实现到机器人后端。</p><p>API Key 不在页面显示，也不会回传给浏览器。保存 Provider 或模型后需要重启 Bot 才会重新加载配置。</p></section>
-  </main>
-</body>
-</html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>QQ AI Bot 管理</title><link rel="stylesheet" href="/static/style.css"></head>
+<body><main class="wrap">
+<header><div><h1>QQ AI Bot</h1><p>QQ 登录、AI 配置与运行状态</p></div><span class="badge">管理后台</span></header>
+{% if request.query_params.get('saved') %}<div class="notice">配置已保存{% if bot_status == 'running' %}，Bot 已重新加载配置。{% else %}。{% endif %}</div>{% endif %}
+<section class="card"><h2>QQ 登录</h2><p>首次部署时直接打开 NapCat WebUI，用手机 QQ 扫码登录。QQ 登录数据和 NapCat 配置会持久化到服务器。</p><div class="login-actions"><a class="button-link" href="{{ config.napcat_webui_url }}" target="_blank" rel="noopener noreferrer">打开 QQ 登录 / NapCat</a></div><div class="napcat-frame-wrap"><iframe src="{{ config.napcat_webui_url }}" title="NapCat QQ 登录" loading="lazy" referrerpolicy="no-referrer" allow="clipboard-read; clipboard-write"></iframe></div><small>WebUI 地址会根据当前管理页面访问地址自动生成，不再写死 127.0.0.1。</small></section>
+<section class="card"><h2>AI Provider</h2><form method="post" action="/admin/config">
+<label>当前 Provider<select name="provider"><option value="gemini" {% if config.provider == 'gemini' %}selected{% endif %}>Gemini</option><option value="mistral" {% if config.provider == 'mistral' %}selected{% endif %}>Mistral</option></select></label>
+<label>Gemini API Key<input name="gemini_api_key" type="password" placeholder="{{ '已配置，留空保持不变' if config.gemini_key_configured else '未配置' }}" autocomplete="new-password"></label>
+<label>Mistral API Key<input name="mistral_api_key" type="password" placeholder="{{ '已配置，留空保持不变' if config.mistral_key_configured else '未配置' }}" autocomplete="new-password"></label>
+<label>Gemini 模型<input name="gemini_model" value="{{ config.gemini_model }}"></label>
+<label>Mistral 文本模型<input name="mistral_model" value="{{ config.mistral_model }}"></label>
+<label>Mistral 视觉模型<input name="mistral_vision_model" value="{{ config.mistral_vision_model }}"></label>
+<div class="login-actions"><button type="submit" name="restart" value="0">保存</button><button type="submit" name="restart" value="1">保存并重启 Bot</button></div></form></section>
+<section class="card grid">
+<div><h2>QQ-AI-Bot</h2><p><strong>{{ {'running':'运行中','disabled':'未启动（API Key 未配置）','error':'初始化失败','starting':'启动中','stopped':'已停止'}.get(bot_status, bot_status) }}</strong></p></div>
+<div><h2>OneBot</h2><p><strong>{{ {'connected':'已连接','connecting':'连接中','disconnected':'已断开'}.get(onebot_status, onebot_status) }}</strong></p></div>
+<div><h2>QQ</h2><p><strong>{% if qq_online is true %}在线{% elif qq_online is false %}离线{% else %}未知{% endif %}</strong></p></div>
+<div><h2>API Key</h2><p>Gemini：<strong>{{ '已配置' if config.gemini_key_configured else '未配置' }}</strong></p><p>Mistral：<strong>{{ '已配置' if config.mistral_key_configured else '未配置' }}</strong></p></div>
+<div><h2>最近 QQ 消息</h2><p>{{ last_message_at or '暂无' }}</p></div>
+<div><h2>最近错误</h2><p>{{ last_error or '无' }}</p></div>
+</section>
+<section class="card"><h2>OneBot 连接</h2><p>{{ config.onebot_ws_url }}</p><small>3001 只在 Docker 内网使用，不映射到 VPS 公网。Bot 会在断线后自动按 2s → 5s → 10s → 30s 退避重连。</small></section>
+<section class="card"><h2>说明</h2><p>NapCat 负责 QQ 登录与 OneBot 11，QQ-AI-Bot 负责 AI 和管理后台。API Key 不会回显；保存 API Key 时留空不会覆盖已有值。</p></section>
+</main></body></html>

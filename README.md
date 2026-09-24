@@ -1,129 +1,177 @@
-# QQ AI Bot — AI/Agent 工作说明
+# QQ AI Bot
 
-## 项目用途
+一个私人 QQ AI 助手。通过 NapCat + OneBot 11 WebSocket 接收 QQ 消息，并提供 FastAPI 管理后台配置 AI Provider、模型、API Key 和 QQ 登录入口。
 
-这是一个私人 QQ AI 助手，主要供项目所有者及极少数信任的用户使用。
+## 当前功能
 
-本项目应保持简单、模块化、易于部署。
-除非用户明确要求，否则不要将项目改造成面向公众的 SaaS 服务。
+- QQ 私聊文本对话
+- Gemini / Mistral Provider
+- 图片理解
+- 按用户保存最多 10 轮上下文
+- 内容过滤
+- NapCat WebUI 扫码登录 QQ
+- 管理后台配置 Provider、模型和 API Key
+- API Key 只显示“已配置 / 未配置”，真实 Key 不回显
+- OneBot 断线自动重连：2s → 5s → 10s → 30s
+- `/health` 健康检查
 
-## 当前已验证功能
+## 架构
 
-- 通过 NapCat + OneBot 11 WebSocket 接收 QQ 私聊消息
-- 支持文本对话及 AI Provider 抽象
-- 支持 Gemini Provider
-- 支持 Mistral Provider
-- 支持图片理解
-- 按平台和用户分别保存对话记忆，目前最多 10 轮
-- 支持 `config/content_filter.json` 内容过滤
-- 首次使用自动发送 `/help`
-- 支持“先发图片，再发问题”的图片理解流程
-- 提供 `/admin/` 管理页面，可配置 AI Provider 和模型
-- 管理页面提供 NapCat QQ 登录入口，首次部署可通过 WebUI 扫码登录 QQ，无需在命令行中完成 QQ 登录
+```text
+QQ
+ ↓
+NapCat + Linux QQ
+ ↓ OneBot 11 WebSocket :3001（Docker 内网）
+QQ-AI-Bot
+ ├─ FastAPI 管理后台 :8080
+ └─ AI Provider
+```
 
-## 当前架构
+Windows 本地开发和 Linux/VPS 正式环境共用同一套 Bot 代码；QQ/NapCat 运行环境通过 Docker 与 Bot 解耦。
 
-`平台适配器 → 核心处理器 → AIManager → AI Provider`
+## Windows 本地开发 / 测试
 
-目前只实现 QQ。
-未来如果增加其他聊天平台，应通过新的平台适配器实现，不要把平台相关逻辑直接耦合进 `core` 或 `ai`。
+在项目根目录运行：
 
-AI Provider 位于 `src/ai/providers/`。
-增加新的 AI Provider 时，应实现 `AIProvider` 接口，并在 `src/ai/manager.py` 中注册。
+```text
+run.bat
+```
 
-## 管理页面
+默认管理页面：
 
-- `src/web/app.py`：启动 FastAPI 和 QQ Bot
-- `src/web/admin.py`：管理页面路由
-- `src/web/config.py`：负责 `.env` 配置读取和写入
-- `src/web/templates/`：管理页面模板
-- `src/web/static/`：管理页面样式
-- Windows 本地运行时，管理页面默认仅监听本机 `127.0.0.1:8080`；Linux / VPS Docker Compose 正式环境会将管理后台发布到宿主机 8080，允许通过 VPS 公网 IP 访问
-- 管理页面中的“QQ 登录”区域使用 NapCat WebUI 完成 QQ 扫码登录；QQ 登录由 NapCat 负责，QQ-AI-Bot 不重复实现 QQ 登录协议
-- `NAPCAT_WEBUI_BROWSER_URL` 用于指定浏览器访问的 NapCat WebUI 地址，默认 `http://127.0.0.1:6099/webui/`
-- Linux / VPS Docker Compose 正式环境当前按部署文档直接发布管理后台 8080；当前版本没有内置登录认证，公网开放前应确认 VPS 安全组 / 主机防火墙只开放必要端口
-- Linux / VPS 公网开放前，应确认这是预期部署方式，并至少在云安全组 / 主机防火墙层面控制开放端口
-- API Key 不得显示在管理页面，只显示“已配置 / 未配置”
-- 修改 Provider 或模型后，目前需要重启程序才能生效
+```text
+http://127.0.0.1:8080/admin/
+```
 
-## 重要配置
+Windows 本地默认只监听 `127.0.0.1`，不会因此影响 Linux/VPS Docker 环境。
 
-- `AI_PROVIDER=gemini|mistral`
-- `GEMINI_API_KEY`
-- `GEMINI_MODEL`
-- `MISTRAL_API_KEY`
-- `MISTRAL_MODEL`
-- `MISTRAL_VISION_MODEL`
-- `ONEBOT_WS_URL`
-- `NAPCAT_WEBUI_BROWSER_URL`
-- `ADMIN_HOST` / `ADMIN_PORT`
-- `CONTENT_FILTER_CONFIG`
+## Linux / VPS / Docker 正式部署
 
-Linux Docker 正式环境使用仓库根目录的 `compose.yaml`：NapCat 与 QQ-AI-Bot 分开运行，通过 Docker 内部网络连接；首次部署后通过管理页面进入 NapCat WebUI 扫码登录 QQ。详细步骤见 `deploy/README.md`。
+正式环境结构：
 
-绝对不要打印、提交或公开 API Key。
-不得将 Secret 写入日志、README、测试文件、截图或聊天回复。
+```text
+Linux VPS
+ └─ Docker Compose
+     ├─ NapCat + QQ
+     └─ QQ-AI-Bot
+```
 
-## 开发规则
+NapCat 官方 Docker 镜像支持将 QQ 数据 `/app/.config/QQ` 和 NapCat 配置 `/app/napcat/config` 持久化到宿主机；本项目在此基础上使用自己的 OneBot 配置模板，避免套用官方 `qq-ai-bot` 模板时误变成反向 WebSocket 客户端。参考 [NapCat-Docker](https://github.com/NapNeko/NapCat-Docker) 的官方 Docker 配置。
 
-1. 修改项目之前必须先阅读本文件。
-2. 修改前先检查真实文件和运行环境，不要凭假设判断项目结构。
-3. 优先进行小范围、可回滚的修改，并逐步验证。
-4. 不要为了展示架构扩展性而提前实现未来平台。
-5. Provider 专属代码必须保持在对应 Provider 模块中。
-6. Secret 必须保存在 `.env`，`.env` 绝对不能提交到 Git。
-7. 没有明确理由和验证方案，不要替换已经正常工作的功能。
-8. 临时测试脚本应放在 Sandbox 中，或者验证完成后删除。
-9. 部署前增加 Linux / Docker 支持时，不得破坏已经验证过的本地运行行为。
-10. 修改启动方式时，必须确认最终只有一个 Bot 实例运行，避免 QQ 重复回复。
+本项目的 Compose 配置因此使用：
 
-## 当前运行方式
+- NapCat 使用仓库自己的 `deploy/napcat/onebot11.json` 配置模板
+- OneBot WebSocket：`0.0.0.0:3001`
+- Token：空字符串
+- 心跳：30000ms
+- 3001 **不映射到 VPS 公网**
+- QQ 数据：`./data/napcat/QQ`
+- NapCat 配置：`./data/napcat/config`
+- 管理后台：`0.0.0.0:8080`
+- NapCat WebUI：`0.0.0.0:6099`
 
-### Windows 本地开发 / 测试
+NapCat 官方当前的 Docker 说明明确将 `/app/.config/QQ` 用于 QQ 持久化数据、`/app/napcat/config` 用于 NapCat 配置；`ACCOUNT` 也是镜像支持的可选 QQ 账号配置项。参考 [NapCat-Docker](https://github.com/NapNeko/NapCat-Docker) 的官方持久化与环境变量说明。
 
-当前已验证的开发 / 测试环境为 Windows + QQ + NapCat + OneBot 11 + QQ-AI-Bot。
+### 首次部署
 
-在项目根目录运行 `run.bat` 即可启动 `src/main.py`。
+```bash
+git clone https://github.com/xiaojiyiobo/QQ-AI-Bot.git
+cd QQ-AI-Bot
+cp .env.example .env
+mkdir -p data/app data/napcat/config data/napcat/QQ
+chmod +x deploy/deploy.sh
+./deploy/deploy.sh
+```
 
-`AI_PROVIDER` 用于选择 AI Provider。
+部署脚本会串行执行 Compose 校验、镜像拉取、Bot 构建、启动和基础健康检查，并使用 `/tmp/qq-ai-bot-deploy.lock` 防止重复部署。
 
-程序会在同一个进程中同时启动：
+启动后：
 
-- 管理 HTTP 服务
-- QQ Bot
+```text
+http://VPS公网IP:6099/webui/
+http://VPS公网IP:8080/admin/
+```
 
-Windows 本地开发 / 测试环境中，管理页面默认仅本机可访问：
+第一次登录 QQ 仍然需要本人扫码。之后 QQ 数据和 NapCat 配置会保存在 `data/napcat/`，因此 Docker 重启、Compose 重启或 VPS 重启时会尽可能复用已有登录状态。**QQ 登录态最终是否会被 QQ 服务端要求重新验证，必须通过实际长时间运行测试确认，不能仅靠 Docker 持久化保证。**
 
-`http://127.0.0.1:8080/admin/`
+### 管理后台
 
-这里的 `127.0.0.1` 仅用于说明当前 Windows 本地运行方式，**不代表 Linux / VPS 正式环境必须使用这个访问地址**。
+打开：
 
-Linux / VPS 正式环境使用 Docker Compose 时，管理后台 8080 和 NapCat WebUI 6099 会按 compose.yaml 发布到宿主机所有网络接口，因此可以通过 VPS 公网 IP 直接访问。当前版本没有内置登录认证，正式环境应至少在云安全组 / 主机防火墙层面控制开放端口。
+```text
+http://VPS公网IP:8080/admin/
+```
 
-### Linux / VPS / Docker 部署
+可以：
 
-QQ-AI-Bot 本身不应与 Windows 或本地 QQ 客户端运行环境耦合。它通过 OneBot 11 WebSocket 与 QQ / NapCat 通信，因此可以将 QQ-AI-Bot 部署在 Linux 服务器、VPS 或 Docker 环境中。
+- 打开 NapCat QQ 登录 WebUI
+- 切换 Gemini / Mistral
+- 修改模型
+- 填写或替换 API Key
+- 留空 API Key 时保持原 Key 不变
+- 保存配置
+- 保存并重启 Bot
+- 查看 Bot / OneBot / QQ 状态
+- 查看最近消息时间和最近错误
 
-当前正在单独的 Linux VPS 环境中进行 **24 小时正式环境实测**。该环境与 Windows 本地开发 / 测试环境分离，不影响 Windows 端的开发和验证。
+生产环境当前**没有管理员登录认证**。如果直接开放 8080/6099 到公网，应使用 VPS 安全组、防火墙或后续反向代理认证控制访问范围。
 
-当前正式环境的目标部署结构为：
+## OneBot 连接
 
-`Linux VPS → Docker / Docker Compose → NapCat + QQ-AI-Bot`
+QQ-AI-Bot 使用：
 
-其中 QQ / NapCat 负责提供 QQ 接入，QQ-AI-Bot 通过 OneBot 11 WebSocket 与 NapCat 通信。NapCat 与 QQ-AI-Bot 也可以部署在不同机器上，只要 OneBot WebSocket 网络可达。OneBot 11 的 WebSocket 通信模式支持 NapCat 作为客户端连接 Bot 侧的 WebSocket 服务端。
+```text
+ws://napcat:3001
+```
 
-Linux / VPS / Docker 部署目前属于**正在实测中的部署方式**，在正式环境验证完成前，不将其描述为与 Windows 一样的完整已验证流程。
+3001 只存在于 Docker Compose 网络中。不要把它映射到 VPS 公网。
 
-增加 Linux / Docker 支持时，必须保持现有 Windows 本地运行方式可用，并确保最终只有一个 QQ Bot 实例运行，避免重复回复。
+NapCat 与 Bot 的 Token 当前统一为空字符串，避免出现一边启用 Token、另一边没有 Token 的半配置状态。以后如果增加 Token 支持，再统一引入 `ONEBOT_ACCESS_TOKEN`。
 
-生产环境的 Docker Compose 配置会直接发布 8080 和 6099；远程访问地址见 deploy/README.md。当前版本暂不增加管理员账号、密码或认证系统。
+## AI 配置持久化
 
-## 部署方向
+Docker 正式环境将管理后台配置保存到：
 
-目标部署环境为 **Linux 服务器**，包括 VPS、独立服务器以及其他能够长期运行 Linux 的服务器环境。
+```text
+data/app/app-config.env
+```
 
-当前优先验证 **VPS 24 小时独立运行**方案，并以 Docker / Docker Compose 作为正式环境的部署方式进行实测。
+该文件由管理后台维护并通过 Docker volume 持久化，不需要把生产 API Key 提交到 Git。Compose 的初始环境变量只作为首次启动默认值。Docker Compose 的 `env_file` 用于向容器注入环境变量，具体优先级以 Compose 规则为准。参考 [Docker Compose 环境变量文档](https://docs.docker.com/compose/how-tos/environment-variables/set-environment-variables/)。
 
-Windows 主要作为本地开发 / 测试环境；Linux 服务器用于长期运行 QQ Bot。两者应保持环境隔离，避免测试过程影响正式 QQ Bot。
+## 健康检查
 
-Docker 化部署正在当前正式环境中实测。验证完成后，再将完整的 Linux / Docker 部署步骤整理为其他用户可以直接复现的部署文档。
+```text
+GET /health
+```
+
+会返回：
+
+- Bot 状态
+- OneBot 连接状态
+- QQ 在线状态（NapCat/OneBot 可提供时）
+- 最近 QQ 消息时间
+- 最近错误摘要
+
+Docker Compose 还会对 NapCat 和 QQ-AI-Bot 分别执行 healthcheck。
+
+## 重要规则
+
+1. 不提交 `.env`、API Key、QQ 登录数据。
+2. Windows 本地测试和 VPS 正式环境必须保持隔离。
+3. 最终只运行一个 QQ-AI-Bot 实例，避免重复回复。
+4. AI 单次请求失败不能导致 Bot 或管理后台退出。
+5. OneBot 断线不能导致管理后台退出。
+6. 新增 Docker/Linux 能力不得破坏 Windows 本地运行。
+
+## 当前验证状态
+
+Windows 本地开发/测试已经验证。Linux/VPS 24 小时无人值守能力正在针对以下问题做专项实测：
+
+- OneBot 3001 自动配置
+- QQ 登录态持久化
+- NapCat 重启后的自动恢复
+- OneBot 断线自动重连
+- AI API 异常隔离
+- 管理后台配置持久化
+
+在完成真实 VPS 长时间测试前，不把“QQ 永不掉线”描述成已经保证的功能。

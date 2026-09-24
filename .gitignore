@@ -7,3 +7,4 @@ src/bot.py.*
 06_Backups/
 *.log
 .pytest_cache/
+data/
